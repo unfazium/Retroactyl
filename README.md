@@ -22,14 +22,14 @@ Supports the following Bedrock server softwares:
 
 **Compatibility**: Currently, Retroactyl Bedrock is under development for ARM platforms. It currently supports only Intel/AMD-based systems.
 
-### 3. Crossplay
+### 3. Crossplay (Geyser-Floodgate)
 Supports the following Geyser-Floodgate server softwares:
 - **Geyser-Floodgate-Paper**
 - **Geyser-Floodgate-Purpur**
 
 **Compatibility**: Retroactyl Crossplay is fully supported on both ARM (e.g., aarch64) and non-ARM (Intel/AMD) platforms.
 
-### 4. Proxy
+### 4. Minecraft Proxy servers
 Supports the following Proxy server softwares:
 - **BungeeCord**
 - **Waterfall**
