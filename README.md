@@ -17,6 +17,7 @@ Supports the following Java server softwares:
 ### 2. Bedrock Edition
 Supports the following Bedrock server softwares:
 - **Nukkit**
+- **PowerNukkitX**
 - **PocketmineMP**
 - **Vanilla Bedrock**
 
@@ -32,9 +33,7 @@ Supports the following Geyser-Floodgate server softwares:
 ### 4. Minecraft Proxy servers
 Supports the following Proxy server softwares:
 - **BungeeCord**
-- **Waterfall**
 - **Velocity**
-- **Geyser-Floodgate-Waterfall**
 - **Geyser-Floodgate-Velocity**
 - **WaterdogPE**
 
