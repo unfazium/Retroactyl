@@ -4,13 +4,11 @@
         "version": "PTDL_v2",
         "update_url": null
     },
-    "exported_at": "2024-11-08T09:11:55+00:00",
-    "name": "Retroactyl Proxy",
-    "author": "mail@retronodes.cloud",
-    "description": "Minecraft server software selector for Proxy servers, compatible with both ARM64 and Intel or AMD-based hardware. Select from Bungeecord, Velocity, Velocity-Geyser-Floodgate and WaterdogPE.",
+    "exported_at": "2025-09-30T02:27:07+00:00",
+    "name": "Retroactyl Bedrock",
+    "author": "egg@unfazium.cloud",
+    "description": "A Multi-Egg server software selector for Minecraft Java Edition including compatibility with both ARM64 and Intel\/AMD based hardware. Select from PowerNukkitX, PocketMine-MP and Vanilla Minecraft.",
     "features": [
-        "eula",
-        "java_version",
         "pid_limit"
     ],
     "docker_images": {
@@ -23,23 +21,23 @@
     "file_denylist": [],
     "startup": ".\/startup.sh",
     "config": {
-        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"query.port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
-        "startup": "{\r\n    \"done\": \")! For help, type \"\r\n}",
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-port\": \"{{server.build.default.port}}\",\r\n            \"server-name\": \"{{server.build.env.SERVERNAME}}\",\r\n            \"gamemode\": \"{{server.build.env.GAMEMODE}}\",\r\n            \"difficulty\": \"{{server.build.env.DIFFICULTY}}\",\r\n            \"allow-cheats\": \"{{server.build.env.CHEATS}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Server started\"\r\n}",
         "logs": "{}",
         "stop": "stop"
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/bash\r\n\r\n# Ensure SERVER_SOFTWARE is defined (if it\u2019s empty, set it to Bungeecord by default)\r\nSERVER_SOFTWARE=\"${SERVER_SOFTWARE:-Bungeecord}\"\r\n\r\n# Helper function for Java installation\r\ninstall_java_21() {\r\n    if ! java -version 2>&1 | grep \"21\" &> \/dev\/null; then\r\n        echo \"Java 21 is not installed. Installing Java 21...\"\r\n        if command -v apk &> \/dev\/null; then\r\n            apk update\r\n            apk add --no-cache openjdk21\r\n        elif command -v apt-get &> \/dev\/null; then\r\n            apt-get update\r\n            apt-get install -y openjdk-21-jdk\r\n        elif command -v yum &> \/dev\/null; then\r\n            yum install -y java-21-openjdk\r\n        else\r\n            echo \"Java installation failed. Please install Java 21 manually.\"\r\n            exit 1\r\n        fi\r\n    else\r\n        echo \"Java 21 is already installed.\"\r\n    fi\r\n}\r\n\r\n# Main installation section\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server || { echo \"Failed to navigate to \/mnt\/server\"; exit 1; }\r\n\r\ncase \"$SERVER_SOFTWARE\" in\r\n    \"Bungeecord\")\r\n        echo \"Starting Bungeecord installation...\"\r\n        install_java_21\r\n\tcd \/mnt\/server\r\n\r\n\tif [ -z \"${BUNGEE_VERSION}\" ] || [ \"${BUNGEE_VERSION}\" == \"latest\" ]; then\r\n    \tBUNGEE_VERSION=\"lastStableBuild\"\r\n\tfi\r\n\r\n\tcurl -o ${SERVER_JARFILE} https:\/\/ci.md-5.net\/job\/BungeeCord\/${BUNGEE_VERSION}\/artifact\/bootstrap\/target\/BungeeCord.jar\r\n        \r\n        # Bungeecord startup command with unix_args.txt check\r\n        echo 'java -Xms128M -XX:MaxRAMPercentage=95.0 -jar server.jar' > startup.sh\r\n        ;;\r\n\r\n    \"Velocity\")\r\n        echo \"Starting Velocity installation...\"\r\n        install_java_21\r\n\tPROJECT=velocity\r\n\r\n\tif [[ -z ${VELOCITY_VERSION} ]] || [[ ${VELOCITY_VERSION} == \"Latest\" ]]; then\r\n    \tVELOCITY_VERSION=\"latest\"\r\n\tfi\r\n\r\n\tif [[ -n \"${DOWNLOAD_LINK}\" ]]; then\r\n    \techo -e \"Using supplied download url: ${DOWNLOAD_LINK}\"\r\n    \tDOWNLOAD_URL=$(eval echo $(echo ${DL_PATH} | sed -e 's\/{{\/${\/g' -e 's\/}}\/}\/g'))\r\n\telse\r\n    \tVER_EXISTS=$(curl -s https:\/\/papermc.io\/api\/v2\/projects\/${PROJECT} | jq -r --arg VERSION $VELOCITY_VERSION '.versions[] | contains($VERSION)' | grep true)\r\n    \tLATEST_VERSION=$(curl -s https:\/\/papermc.io\/api\/v2\/projects\/${PROJECT} | jq -r '.versions' | jq -r '.[-1]')\r\n\r\n\tif [[ \"${VER_EXISTS}\" == \"true\" ]]; then\r\n    \techo -e \"Version is valid. Using version ${VELOCITY_VERSION}\"\r\n\telse\r\n    \techo -e \"Using the latest ${PROJECT} version\"\r\n    \tVELOCITY_VERSION=${LATEST_VERSION}\r\n\tfi\r\n\r\n\tBUILD_EXISTS=$(curl -s https:\/\/papermc.io\/api\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep true)\r\n\tLATEST_BUILD=$(curl -s https:\/\/papermc.io\/api\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION} | jq -r '.builds' | jq -r '.[-1]')\r\n\r\n\tif [[ \"${BUILD_EXISTS}\" == \"true\" ]]; then\r\n    \techo -e \"Build is valid for version ${VELOCITY_VERSION}. Using build ${BUILD_NUMBER}\"\r\n\telse\r\n    \techo -e \"Using the latest ${PROJECT} build for version ${VELOCITY_VERSION}\"\r\n    \tBUILD_NUMBER=${LATEST_BUILD}\r\n\tfi\r\n\r\n\tJAR_NAME=${PROJECT}-${VELOCITY_VERSION}-${BUILD_NUMBER}.jar\r\n\techo \"Version being downloaded\"\r\n\techo -e \"Velocity Version: ${VELOCITY_VERSION}\"\r\n\techo -e \"Build: ${BUILD_NUMBER}\"\r\n\techo -e \"JAR Name of Build: ${JAR_NAME}\"\r\n\tDOWNLOAD_URL=https:\/\/papermc.io\/api\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION}\/builds\/${BUILD_NUMBER}\/downloads\/${JAR_NAME}\r\n\r\n\tfi\r\n\tcd \/mnt\/server\r\n\techo -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\r\n\r\n\tif [[ -f ${SERVER_JARFILE} ]]; then\r\n\tmv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\r\n\tfi\r\n\r\n\tcurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\n\tif [[ -f velocity.toml ]]; then\r\n    \techo -e \"velocity config file exists\"\r\n\telse\r\n    \techo -e \"downloading velocity config file.\"\r\n    \tcurl https:\/\/raw.githubusercontent.com\/parkervcp\/eggs\/master\/game_eggs\/minecraft\/proxy\/java\/velocity\/velocity.toml -o velocity.toml\r\n\tfi\r\n\r\n\tif [[ -f forwarding.secret ]]; then\r\n    \techo -e \"velocity forwarding secret file already exists\"\r\n\telse\r\n    \techo -e \"creating forwarding secret file\"\r\n    \ttouch forwarding.secret\r\n    \tdate +%s | sha256sum | base64 | head -c 12 > forwarding.secret\r\n\tfi\r\n\r\n\techo -e \"install complete\"\r\n    \r\n        # Velocity startup command with unix_args.txt check\r\n        echo 'java -Xms128M -XX:MaxRAMPercentage=95.0 -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxInlineLevel=15 -jar server.jar' > startup.sh\r\n        ;;\r\n\r\n    \"Velocity-Geyser-Floodgate\")\r\n        echo \"Starting Velocity-Geyser-Floodgate installation...\"\r\n        install_java_21\r\n\tPROJECT=velocity\r\n\tif [ -n \"${DL_PATH}\" ]; then\r\n\techo -e \"Using supplied download url: ${DL_PATH}\"\r\n\tDOWNLOAD_URL=`eval echo $(echo ${DL_PATH} | sed -e 's\/{{\/${\/g' -e 's\/}}\/}\/g')`\r\n\telse\r\n\tVER_EXISTS=`curl -s https:\/\/api.papermc.io\/v2\/projects\/${PROJECT} | jq -r --arg VERSION $VELOCITY_VERSION '.versions[] | contains($VERSION)' | grep -m1 true`\r\n\tLATEST_VERSION=`curl -s https:\/\/api.papermc.io\/v2\/projects\/${PROJECT} | jq -r '.versions' | jq -r '.[-1]'`\r\n\tif [ \"${VER_EXISTS}\" == \"true\" ]; then\r\n\techo -e \"Version is valid. Using version ${VELOCITY_VERSION}\"\r\n\telse\r\n\techo -e \"Using the latest ${PROJECT} version\"\r\n\tVELOCITY_VERSION=${LATEST_VERSION}\r\n\tfi\r\n\tBUILD_EXISTS=`curl -s https:\/\/api.papermc.io\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep -m1 true`\r\n\tLATEST_BUILD=`curl -s https:\/\/api.papermc.io\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION} | jq -r '.builds' | jq -r '.[-1]'`\r\n\tif [ \"${BUILD_EXISTS}\" == \"true\" ]; then\r\n\techo -e \"Build is valid for version ${VELOCITY_VERSION}. Using build ${BUILD_NUMBER}\"\r\n\telse\r\n\techo -e \"Using the latest ${PROJECT} build for version ${VELOCITY_VERSION}\"\r\n\tBUILD_NUMBER=${LATEST_BUILD}\r\n\tfi\r\n\tJAR_NAME=${PROJECT}-${VELOCITY_VERSION}-${BUILD_NUMBER}.jar\r\n\techo \"Version being downloaded\"\r\n\techo -e \"MC Version: ${VELOCITY_VERSION}\"\r\n\techo -e \"Build: ${BUILD_NUMBER}\"\r\n\techo -e \"JAR Name of Build: ${JAR_NAME}\"\r\n\tDOWNLOAD_URL=https:\/\/api.papermc.io\/v2\/projects\/${PROJECT}\/versions\/${VELOCITY_VERSION}\/builds\/${BUILD_NUMBER}\/downloads\/${JAR_NAME}\r\n\tfi\r\n\tcd \/mnt\/server\r\n\techo -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\r\n\tif [ -f ${SERVER_JARFILE} ]; then\r\n\tmv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\r\n\tfi\r\n\tcurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\tmkdir plugins\r\n\techo -e \"Downloading Geyser\"\r\n\tGEYSER_HASH=`curl -L https:\/\/download.geysermc.org\/v2\/projects\/geyser\/versions\/latest\/builds\/latest | jq -r .downloads.velocity.sha256`\r\n\tcurl -o plugins\/geyser-velocity.jar -L https:\/\/download.geysermc.org\/v2\/projects\/geyser\/versions\/latest\/builds\/latest\/downloads\/velocity\r\n\techo \"${GEYSER_HASH} plugins\/geyser-velocity.jar\" | sha256sum -c\r\n\tRESULT=$?\r\n\tif [[ $RESULT -eq 0 ]]; then\r\n\techo \"Geyser SHA256 match\"\r\n\telse\r\n\techo \"SHA256 does not match! Aborting...\"\r\n\trm plugins\/geyser-velocity.jar\r\n\texit 1\r\n\tfi\r\n\techo -e \"Downloading Floodgate\"\r\n\tFLOODGATE_HASH=`curl -L https:\/\/download.geysermc.org\/v2\/projects\/floodgate\/versions\/latest\/builds\/latest | jq -r .downloads.velocity.sha256`\r\n\tcurl -o plugins\/floodgate-velocity.jar -L https:\/\/download.geysermc.org\/v2\/projects\/floodgate\/versions\/latest\/builds\/latest\/downloads\/velocity\r\n\techo \"${FLOODGATE_HASH} plugins\/floodgate-velocity.jar\" | sha256sum -c\r\n\tRESULT=$?\r\n\tif [[ $RESULT -eq 0 ]]; then\r\n\techo \"Floodgate SHA256 match\"\r\n\telse\r\n\techo \"SHA256 does not match! Aborting...\"\r\n\trm plugins\/floodgate-velocity.jar\r\n\texit 1\r\n\tfi\r\n\tmkdir -p plugins\/Geyser-Velocity\/\r\n\tif [[ ! -f \"plugins\/Geyser-Velocity\/config.yml\" ]]; then\r\n\techo -e \"Downloading default Geyser config\"\r\n\tcurl -o plugins\/Geyser-Velocity\/config.yml https:\/\/raw.githubusercontent.com\/GeyserMC\/Geyser\/master\/core\/src\/main\/resources\/config.yml\r\n\tsed -i 's\/: online\/: floodgate\/g' plugins\/Geyser-Velocity\/config.yml\r\n\tfi\r\n    \r\n        # Velocity-Geyser-Floodgate startup command with unix_args.txt check\r\n        echo 'java -Xms128M -XX:MaxRAMPercentage=95.0 -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxInlineLevel=15 -DgeyserUdpPort={{GEYSER_PORT}} -jar server.jar' > startup.sh\r\n        ;;\r\n\r\n    \"WaterdogPE\")\r\n    \techo \"Starting WaterdogPE installation...\"\r\n    \tinstall_java_21\r\n    \r\n    \t# Ensure \/mnt\/server directory exists\r\n    \tif [ ! -d \/mnt\/server ]; then\r\n        mkdir \/mnt\/server\r\n    \tfi\r\n\r\n    \tcd \/mnt\/server\r\n\r\n    \t# Adding '.jar' if it isn't part of the file name\r\n    \tif [ \"${SERVER_JARFILE_PE}\" != *.jar ]; then\r\n        echo -e \"Adding .jar to server file name\"\r\n        SERVER_JARFILE=\"${SERVER_JARFILE}.jar\"\r\n    \tfi\r\n\r\n    \t# Download the Waterdog PE build\r\n    \tif [ -z \"${WATERDOG_VERSION}\" ] || [ \"${WATERDOG_VERSION}\" == \"latest\" ]; then\r\n        echo -e \"Downloading latest Waterdog PE build\"\r\n        curl -sSL -o ${SERVER_JARFILE_PE} https:\/\/jenkins.waterdog.dev\/job\/Waterdog\/job\/WaterdogPE\/job\/release\/lastSuccessfulBuild\/artifact\/target\/Waterdog.jar\r\n    \telse \r\n        echo -e \"Downloading Waterdog PE build ${WATERDOG_VERSION}\"\r\n        curl -sSL -o ${SERVER_JARFILE_PE} https:\/\/jenkins.waterdog.dev\/job\/Waterdog\/job\/WaterdogPE\/job\/release\/${WATERDOG_VERSION}\/artifact\/target\/Waterdog.jar\r\n    \tfi\r\n\r\n    \t# Download config.yml if it doesn't exist\r\n    \tif [ ! -f config.yml ]; then\r\n        echo -e \"Downloading Waterdog PE config.yml\"\r\n        curl -o config.yml https:\/\/raw.githubusercontent.com\/parkervcp\/eggs\/master\/game_eggs\/minecraft\/proxy\/bedrock\/waterdog_pe\/config.yml\r\n    \telse\r\n        echo -e \"Waterdog PE config.yml exists. Will not pull a new file\"\r\n    \tfi\r\n\r\n    \t## install end\r\n    \techo \"-----------------------------------------\"\r\n    \techo \"Installation completed...\"\r\n    \techo \"-----------------------------------------\"\r\n    \r\n    \t# WaterdogPE startup command with unix_args.txt check\r\n    \techo 'java -Dterminal.ansi=true -Xms128M -XX:MaxRAMPercentage=95.0 -jar server.jar' > startup.sh\r\n    \t;;\r\n\r\n\r\n    *)\r\n        echo \"Unrecognized server software: $SERVER_SOFTWARE. Defaulting to Bungeecord latest.\"\r\n        echo \"Starting Bungeecord installation...\"\r\n        install_java_21\r\n\tcd \/mnt\/server\r\n\r\n\tif [ -z \"${BUNGEE_VERSION}\" ] || [ \"${BUNGEE_VERSION}\" == \"latest\" ]; then\r\n    \tBUNGEE_VERSION=\"lastStableBuild\"\r\n\tfi\r\n\r\n\tcurl -o ${SERVER_JARFILE} https:\/\/ci.md-5.net\/job\/BungeeCord\/${BUNGEE_VERSION}\/artifact\/bootstrap\/target\/BungeeCord.jar\r\n        \r\n        # Bungeecord startup command with unix_args.txt check\r\n        echo 'java -Xms128M -XX:MaxRAMPercentage=95.0 -jar server.jar' > startup.sh\r\n        ;;\r\nesac\r\n\r\n# Final setup and permissions\r\nchmod +x startup.sh\r\necho \"Setup complete. You may click on the start button.\"",
-            "container": "ghcr.io\/pterodactyl\/installers:alpine",
-            "entrypoint": "ash"
+            "script": "#!\/bin\/bash\r\n\r\n# Ensure SERVER_SOFTWARE is defined (if it\u2019s empty, set it to Vanilla by default)\r\nSERVER_SOFTWARE=\"${SERVER_SOFTWARE:-Vanilla}\"\r\n\r\n# Helper function for Java installation\r\ninstall_java_21() {\r\n    if ! java -version 2>&1 | grep \"21\" &> \/dev\/null; then\r\n        echo \"Java 21 is not installed. Installing Java 21...\"\r\n        \r\n        # Update the package list\r\n\tapt-get update -y\r\n        # Install OpenJDK 21\r\n        if ! apt-get install -y openjdk-21-jdk; then\r\n            echo \"Java installation failed. Please install Java 21 manually.\"\r\n            exit 1\r\n        fi\r\n    else\r\n        echo \"Java 21 is already installed.\"\r\n    fi\r\n}\r\n\r\n# Main installation section\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server || { echo \"Failed to navigate to \/mnt\/server\"; exit 1; }\r\n\r\ncase \"$SERVER_SOFTWARE\" in\r\n\r\n\"PowerNukkitX\")\r\n    echo \"Starting PowerNukkitX installation...\"\r\n    # Install dependencies\r\n    apt-get update && apt-get install -y wget || exit 1\r\n\r\n    # Navigate to server directory\r\n    mkdir -p \/mnt\/server\r\n    cd \/mnt\/server || exit 1\r\n\r\n    # Download PowerNukkitX jar file\r\n    echo \"Downloading PowerNukkitX...\"\r\n    wget https:\/\/github.com\/PowerNukkitX\/PowerNukkitX\/releases\/download\/snapshot\/powernukkitx.jar -O powernukkitx.jar || { echo \"Download failed\"; exit 1; }\r\n\r\n    echo \"PowerNukkitX setup completed successfully.\"\r\n\r\n    # Nukkit startup command\r\n    echo 'java -jar powernukkitx.jar' > startup.sh\r\n    chmod +x startup.sh\r\n    ;;\r\n\r\n\"PocketMineMP\")\r\n    echo \"Starting PocketMine-MP installation...\"\r\n    SERVER_SOFTWARE=\"PocketMineMP\"\r\n\r\n    # Install dependencies\r\n    apt-get update\r\n    apt-get install -y curl wget jq unzip\r\n\r\n    mkdir -p \/mnt\/server\r\n    cd \/mnt\/server || exit 1\r\n\r\n    ARCH=$([[ \"$(uname -m)\" == \"x86_64\" ]] && printf \"x86_64\" || printf \"aarch64\")\r\n\r\n    # Force PM5 (latest stable channel)\r\n    VERSION=\"PM5\"\r\n\r\n    # Always fetch latest PM5 build\r\n    PHP_RELEASE=\"pm5-latest\"\r\n    PHP_TARBALL=\"PHP-8.2-Linux-${ARCH}-PM5.tar.gz\"\r\n\r\n    echo \"Downloading PHP binary for PM5...\"\r\n    curl -L \"https:\/\/github.com\/pmmp\/PHP-Binaries\/releases\/download\/${PHP_RELEASE}\/${PHP_TARBALL}\" \\\r\n        -o php-bin.tar.gz || { echo \"Failed to fetch PHP binaries\"; exit 1; }\r\n\r\n    echo \"Extracting PHP binaries...\"\r\n    tar -xzf php-bin.tar.gz || { echo \"Failed to extract PHP binaries\"; exit 1; }\r\n    rm php-bin.tar.gz\r\n\r\n    # Configure php.ini\r\n    echo \"Configuring php.ini...\"\r\n    EXTENSION_DIR=$(find \"bin\" -name '*debug-zts*' | head -n1)\r\n    if [[ -n \"$EXTENSION_DIR\" ]]; then\r\n        grep -q '^extension_dir' bin\/php7\/bin\/php.ini \\\r\n            && sed -i 's|^extension_dir=.*|extension_dir=\"'\"$EXTENSION_DIR\"'\"|' bin\/php7\/bin\/php.ini \\\r\n            || echo \"extension_dir=\\\"$EXTENSION_DIR\\\"\" >> bin\/php7\/bin\/php.ini\r\n    fi\r\n\r\n    # Download PocketMine-MP PM5 phar\r\n    echo \"Fetching PocketMine-MP (PM5)...\"\r\n    DOWNLOAD_LINK=$(curl -sSL \"https:\/\/update.pmmp.io\/api?channel=stable\" | jq -r '.download_url')\r\n    curl -L \"$DOWNLOAD_LINK\" -o PocketMine-MP.phar\r\n\r\n    # Create default configs\r\n    if [[ ! -f server.properties ]]; then\r\n        curl -L -o server.properties \\\r\n            https:\/\/raw.githubusercontent.com\/parkervcp\/eggs\/master\/game_eggs\/minecraft\/bedrock\/pocketmine_mp\/server.properties\r\n    fi\r\n\r\n    touch banned-ips.txt banned-players.txt ops.txt white-list.txt server.log\r\n    mkdir -p players worlds plugins resource_packs\r\n\r\n    echo \"----------------------------------------\"\r\n    echo \"|   PocketMine-MP Installation Done    |\"\r\n    echo \"----------------------------------------\"\r\n\r\n    # Startup script\r\n    echo '.\/bin\/php7\/bin\/php .\/PocketMine-MP.phar --no-wizard --disable-ansi' > startup.sh\r\n    chmod +x startup.sh\r\n    ;;\r\n\r\n\"Vanilla\")\r\n    echo \"Starting Vanilla Bedrock installation...\"\r\n    SERVER_SOFTWARE=\"Vanilla\"\r\n\r\n    echo \"Fetching the latest Bedrock version from Minecraft Wiki...\"\r\n\r\n    # 1. Fetch the latest RELEASE version from the Minecraft Wiki\r\n    LATEST_VERSION=$(curl -s \"https:\/\/minecraft.wiki\/w\/Bedrock_Dedicated_Server\" | \\\r\n        grep -oP 'Release:.*?>\\K[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' | \\\r\n        head -n 1)\r\n\r\n    if [ -z \"$LATEST_VERSION\" ]; then\r\n        echo \"Error: Could not retrieve the latest Bedrock version from the wiki.\"\r\n        exit 1\r\n    fi\r\n\r\n    # 2. Construct the final download URL using the specific minecraft.net domain\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$LATEST_VERSION.zip\"\r\n    DOWNLOAD_FILE=\"bedrock-server-$LATEST_VERSION.zip\"\r\n\r\n    echo \"Latest Bedrock version found: $LATEST_VERSION\"\r\n    echo \"Download URL: $DOWNLOAD_URL\"\r\n\r\n    echo \"Cleaning up old server files...\"\r\n    rm -f bedrock-server-*.zip\r\n    rm -rf bedrock_server\r\n\r\n    # Install necessary packages\r\n    apt-get update\r\n    apt-get install -y --no-install-recommends curl unzip\r\n\r\n    echo \"Downloading Minecraft Bedrock server...\"\r\n    # Using curl -L to follow redirects, if the minecraft.net link redirects to azureedge.net\r\n    curl -L -o $DOWNLOAD_FILE -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64)\" \\\r\n        -H \"Accept-Language: en\" \\\r\n        -H \"Referer: https:\/\/minecraft.wiki\" \\\r\n        \"$DOWNLOAD_URL\"\r\n\r\n    if [ $? -ne 0 ] || [ ! -f $DOWNLOAD_FILE ]; then\r\n        echo \"Error: Failed to download the server file. Check the constructed URL or DNS resolution.\"\r\n        exit 1\r\n    fi\r\n\r\n    echo \"Unpacking server files...\"\r\n    unzip -o $DOWNLOAD_FILE\r\n\r\n    if [ $? -ne 0 ]; then\r\n        echo \"Error: Failed to unpack the server files.\"\r\n        exit 1\r\n    fi\r\n\r\n    echo \"Cleaning up...\"\r\n    rm -f $DOWNLOAD_FILE\r\n\r\n    chmod +x bedrock_server\r\n\r\n    # Startup command\r\n    echo '.\/bedrock_server' > startup.sh\r\n    chmod +x startup.sh\r\n\r\n    echo \"----------------------------------------\"\r\n    echo \"| Minecraft Bedrock Server Installed!  |\"\r\n    echo \"----------------------------------------\"\r\n    ;;\r\n\r\n*)\r\n    echo \"Unrecognized server software: $SERVER_SOFTWARE. Defaulting to Vanilla latest.\"\r\n    echo \"Starting Vanilla Bedrock installation...\"\r\n    SERVER_SOFTWARE=\"Vanilla\"\r\n\r\n    echo \"Fetching the latest Bedrock version from Minecraft Wiki...\"\r\n\r\n    # 1. Fetch the latest RELEASE version from the Minecraft Wiki\r\n    LATEST_VERSION=$(curl -s \"https:\/\/minecraft.wiki\/w\/Bedrock_Dedicated_Server\" | \\\r\n        grep -oP 'Release:.*?>\\K[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+' | \\\r\n        head -n 1)\r\n\r\n    if [ -z \"$LATEST_VERSION\" ]; then\r\n        echo \"Error: Could not retrieve the latest Bedrock version from the wiki.\"\r\n        exit 1\r\n    fi\r\n\r\n    # 2. Construct the final download URL using the specific minecraft.net domain\r\n    DOWNLOAD_URL=\"https:\/\/www.minecraft.net\/bedrockdedicatedserver\/bin-linux\/bedrock-server-$LATEST_VERSION.zip\"\r\n    DOWNLOAD_FILE=\"bedrock-server-$LATEST_VERSION.zip\"\r\n\r\n    echo \"Latest Bedrock version found: $LATEST_VERSION\"\r\n    echo \"Download URL: $DOWNLOAD_URL\"\r\n\r\n    echo \"Cleaning up old server files...\"\r\n    rm -f bedrock-server-*.zip\r\n    rm -rf bedrock_server\r\n\r\n    # Install necessary packages\r\n    apt-get update\r\n    apt-get install -y --no-install-recommends curl unzip\r\n\r\n    echo \"Downloading Minecraft Bedrock server...\"\r\n    # Using curl -L to follow redirects, if the minecraft.net link redirects to azureedge.net\r\n    curl -L -o $DOWNLOAD_FILE -A \"Mozilla\/5.0 (Windows NT 10.0; Win64; x64)\" \\\r\n        -H \"Accept-Language: en\" \\\r\n        -H \"Referer: https:\/\/minecraft.wiki\" \\\r\n        \"$DOWNLOAD_URL\"\r\n\r\n    if [ $? -ne 0 ] || [ ! -f $DOWNLOAD_FILE ]; then\r\n        echo \"Error: Failed to download the server file. Check the constructed URL or DNS resolution.\"\r\n        exit 1\r\n    fi\r\n\r\n    echo \"Unpacking server files...\"\r\n    unzip -o $DOWNLOAD_FILE\r\n\r\n    if [ $? -ne 0 ]; then\r\n        echo \"Error: Failed to unpack the server files.\"\r\n        exit 1\r\n    fi\r\n\r\n    echo \"Cleaning up...\"\r\n    rm -f $DOWNLOAD_FILE\r\n\r\n    chmod +x bedrock_server\r\n\r\n    # Startup command\r\n    echo '.\/bedrock_server' > startup.sh\r\n    chmod +x startup.sh\r\n\r\n    echo \"----------------------------------------\"\r\n    echo \"| Minecraft Bedrock Server Installed!  |\"\r\n    echo \"----------------------------------------\"\r\n    ;;\r\n\r\nesac\r\n\r\n# Final setup and permissions\r\nchmod +x startup.sh\r\necho \"The installation process has been completed. Please click the Start button to continue.\"",
+            "container": "ghcr.io\/pterodactyl\/installers:debian",
+            "entrypoint": "bash"
         }
     },
     "variables": [
         {
             "name": "Minecraft Version",
             "description": "Installs the latest version of Minecraft for your selected server software",
-            "env_variable": "MINECRAFT_VERSION",
+            "env_variable": "MCV",
             "default_value": "Latest",
             "user_viewable": true,
             "user_editable": false,
@@ -48,102 +46,62 @@
         },
         {
             "name": "Server Software",
-            "description": "Write the server software to install: Bungeecord, Velocity, Velocity-Geyser-Floodgate or WaterdogPE",
+            "description": "Write the server software to install: PowerNukkitX, PocketMineMP or Vanilla",
             "env_variable": "SERVER_SOFTWARE",
-            "default_value": "Bungeecord",
+            "default_value": "Vanilla",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|string|max:100",
+            "rules": "required|string|max:20",
             "field_type": "text"
         },
         {
-            "name": "Download Path",
-            "description": "A URL to use to download a server.jar rather than the ones in the install script. This is not user viewable.",
-            "env_variable": "DL_PATH",
-            "default_value": "",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "nullable|string",
-            "field_type": "text"
-        },
-        {
-            "name": "Build Number",
-            "description": "",
-            "env_variable": "BUILD_NUMBER",
-            "default_value": "latest",
+            "name": "LD Lib Path",
+            "description": "Minecraft Bedrock",
+            "env_variable": "LD_LIBRARY_PATH",
+            "default_value": ".",
             "user_viewable": false,
             "user_editable": false,
             "rules": "required|string|max:20",
             "field_type": "text"
         },
         {
-            "name": "Bungeecord Version",
-            "description": "The version of Bungeecord to download and use.",
-            "env_variable": "BUNGEE_VERSION",
-            "default_value": "latest",
+            "name": "Gamemode",
+            "description": "Allowed values: \"survival\", \"creative\", or \"adventure\"",
+            "env_variable": "GAMEMODE",
+            "default_value": "survival",
             "user_viewable": false,
             "user_editable": false,
-            "rules": "required|alpha_num|between:1,6",
+            "rules": "required|string|in:survival,creative,adventure",
+            "field_type": "text"
+        },
+        {
+            "name": "Difficulty",
+            "description": "Allowed values: \"peaceful\", \"easy\", \"normal\", or \"hard\"",
+            "env_variable": "DIFFICULTY",
+            "default_value": "easy",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:peaceful,easy,normal,hard",
+            "field_type": "text"
+        },
+        {
+            "name": "Allow cheats",
+            "description": "Allowed values: \"true\" or \"false\"",
+            "env_variable": "CHEATS",
+            "default_value": "false",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:true,false",
             "field_type": "text"
         },
         {
             "name": "Server Jar File",
-            "description": "",
+            "description": "The name of the server jarfile to run the Nukkit server",
             "env_variable": "SERVER_JARFILE",
             "default_value": "server.jar",
             "user_viewable": false,
             "user_editable": false,
             "rules": "required|regex:\/^([\\w\\d._-]+)(\\.jar)$\/",
-            "field_type": "text"
-        },
-        {
-            "name": "Velocity Version",
-            "description": "The Velocity Proxy version to download.\r\nSet to 'latest ' the download the last stable build.",
-            "env_variable": "VELOCITY_VERSION",
-            "default_value": "latest",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "required|string|max:20",
-            "field_type": "text"
-        },
-        {
-            "name": "Geyser Port",
-            "description": "The UDP port that Geyser will listen on\r\n\"-1\" will forcibly stop Geyser\r\n\"server\" will have Geyser listen on the same port as the TCP server",
-            "env_variable": "GEYSER_PORT",
-            "default_value": "19132",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "required|string|max:6",
-            "field_type": "text"
-        },
-        {
-            "name": "Download Link",
-            "description": "A link to the server jar to download the waterfall jar.",
-            "env_variable": "DL_LINK",
-            "default_value": "",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "nullable|string",
-            "field_type": "text"
-        },
-        {
-            "name": "Waterdog PE Version",
-            "description": "The build to pull and install. (Ex. 23), or set to latest\r\nThis is the build number on https:\/\/jenkins.waterdog.dev\/",
-            "env_variable": "WATERDOG_VERSION",
-            "default_value": "latest",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "required|string|max:20",
-            "field_type": "text"
-        },
-        {
-            "name": "Server Jar File PE",
-            "description": "The jar to run to WaterdogPE",
-            "env_variable": "SERVER_JARFILE_PE",
-            "default_value": "server.jar",
-            "user_viewable": false,
-            "user_editable": false,
-            "rules": "required|string|max:20",
             "field_type": "text"
         }
     ]
