@@ -7,7 +7,7 @@
     "exported_at": "2025-09-30T06:45:51+00:00",
     "name": "Retroactyl Proxy",
     "author": "egg@unfazium.cloud",
-    "description": "Minecraft server software selector for Proxy servers, compatible with both ARM64 and Intel or AMD-based hardware. Select from Bungeecord, Bungeecord-Geyser,Velocity, Velocity-Geyser and WaterdogPE.",
+    "description": "Minecraft server software selector for Proxy servers, compatible with both ARM64 and Intel or AMD-based hardware. Select from Bungeecord, Bungeecord-Geyser, Velocity, Velocity-Geyser and WaterdogPE.",
     "features": [
         "eula",
         "java_version",
